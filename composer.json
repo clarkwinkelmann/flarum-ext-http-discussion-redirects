@@ -1,0 +1,34 @@
+{
+    "name": "clarkwinkelmann/flarum-ext-http-discussion-redirects",
+    "description": "Redirect discussions to their canonical URL via 301 redirects",
+    "keywords": [
+        "flarum"
+    ],
+    "type": "flarum-extension",
+    "license": "MIT",
+    "require": {
+        "flarum/core": ">=0.1.0-beta.13 <0.1.0-beta.14"
+    },
+    "authors": [
+        {
+            "name": "Clark Winkelmann",
+            "email": "clark.winkelmann@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "ClarkWinkelmann\\HttpDiscussionRedirects\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "HTTP Discussion Redirects",
+            "icon": {
+                "name": "fas fa-directions",
+                "backgroundColor": "#684ba6",
+                "color": "#fff"
+            }
+        }
+    }
+}
