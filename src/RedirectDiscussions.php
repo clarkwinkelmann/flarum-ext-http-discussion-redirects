@@ -2,6 +2,7 @@
 
 namespace ClarkWinkelmann\HttpDiscussionRedirects;
 
+use Flarum\Foundation\Config;
 use Flarum\Http\UrlGenerator;
 use Illuminate\Support\Str;
 use Laminas\Diactoros\Response\RedirectResponse;
@@ -32,7 +33,7 @@ class RedirectDiscussions implements MiddlewareInterface
                 $canonicalPath = (new Uri($matches[1]))->getPath();
 
                 if ($request->getUri()->getPath() !== $canonicalPath) {
-                    return new RedirectResponse($canonicalPath, app()->inDebugMode() ? 302 : 301);
+                    return new RedirectResponse($canonicalPath, app(Config::class)->inDebugMode() ? 302 : 301);
                 }
             }
 
