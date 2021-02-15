@@ -2,11 +2,12 @@
 
 namespace ClarkWinkelmann\HttpDiscussionRedirects;
 
+use Flarum\Discussion\Discussion;
 use Flarum\Foundation\Config;
+use Flarum\Http\SlugManager;
 use Flarum\Http\UrlGenerator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\RedirectResponse;
-use Laminas\Diactoros\Uri;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -14,32 +15,36 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class RedirectDiscussions implements MiddlewareInterface
 {
+    protected $slugManager;
+    protected $config;
+    protected $url;
+
+    public function __construct(SlugManager $slugManager, Config $config, UrlGenerator $url)
+    {
+        $this->slugManager = $slugManager;
+        $this->config = $config;
+        $this->url = $url;
+    }
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $handler->handle($request);
+        if ($request->getAttribute('routeName') === 'discussion') {
+            $parameters = $request->getAttribute('routeParameters');
+            $slug = Arr::get($parameters, 'id');
 
-        /**
-         * @var $url UrlGenerator
-         */
-        $url = app(UrlGenerator::class);
+            $slugger = $this->slugManager->forResource(Discussion::class);
 
-        if (Str::startsWith($request->getUri()->getPath(), (new Uri($url->to('forum')->route('discussion', ['id' => ''])))->getPath())) {
-            $body = $response->getBody()->getContents();
+            $discussion = $slugger->fromSlug($slug, $request->getAttribute('actor'));
 
-            // An ideal solution would be to use a content extender,
-            // but unfortunately because of https://github.com/flarum/core/issues/2239
-            // the content extender can't access $document->canonicalUrl
-            if (preg_match('~<link rel="canonical" href="([^"]+)">~', $body, $matches) === 1) {
-                $canonicalPath = (new Uri($matches[1]))->getPath();
+            $canonicalSlug = $slugger->toSlug($discussion);
 
-                if ($request->getUri()->getPath() !== $canonicalPath) {
-                    return new RedirectResponse($canonicalPath, app(Config::class)->inDebugMode() ? 302 : 301);
-                }
+            if ($slug !== $canonicalSlug) {
+                return new RedirectResponse($this->url->to('forum')->route('discussion', [
+                        'id' => $canonicalSlug,
+                    ] + $parameters), $this->config->inDebugMode() ? 302 : 301);
             }
-
-            $response->getBody()->rewind();
         }
 
-        return $response;
+        return $handler->handle($request);
     }
 }

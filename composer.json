@@ -7,15 +7,20 @@
     "type": "flarum-extension",
     "license": "MIT",
     "require": {
-        "flarum/core": ">=0.1.0-beta.14 <0.1.0-beta.15"
+        "flarum/core": ">=0.1.0-beta.15 <0.1.0-beta.16"
     },
     "authors": [
         {
             "name": "Clark Winkelmann",
+            "homepage": "https://clarkwinkelmann.com/",
             "email": "clark.winkelmann@gmail.com",
             "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/clarkwinkelmann/flarum-ext-http-discussion-redirects/issues",
+        "source": "https://github.com/clarkwinkelmann/flarum-ext-http-discussion-redirects"
+    },
     "autoload": {
         "psr-4": {
             "ClarkWinkelmann\\HttpDiscussionRedirects\\": "src/"
@@ -24,6 +29,7 @@
     "extra": {
         "flarum-extension": {
             "title": "HTTP Discussion Redirects",
+            "category": "feature",
             "icon": {
                 "name": "fas fa-directions",
                 "backgroundColor": "#684ba6",
