@@ -2,10 +2,9 @@
 
 namespace ClarkWinkelmann\HttpDiscussionRedirects;
 
-use Flarum\Http\UrlGenerator;
+use Flarum\Discussion\DiscussionRepository;
 use Illuminate\Support\Str;
 use Laminas\Diactoros\Response\RedirectResponse;
-use Laminas\Diactoros\Uri;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -13,32 +12,27 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class RedirectDiscussions implements MiddlewareInterface
 {
+    protected $repository;
+
+    public function __construct(DiscussionRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $handler->handle($request);
+        $path = $request->getUri()->getPath();
 
-        /**
-         * @var $url UrlGenerator
-         */
-        $url = app(UrlGenerator::class);
+        if (Str::startsWith($path, '/d/') && preg_match('~/d/(\d+)(?:-[^/]*)?(?:/([^/]*))?~', $path, $matches) === 1) {
+            $discussion = $this->repository->findOrFail($matches[1], $request->getAttribute('actor'));
 
-        if (Str::startsWith($request->getUri()->getPath(), (new Uri($url->to('forum')->route('discussion', ['id' => ''])))->getPath())) {
-            $body = $response->getBody()->getContents();
+            $canonicalPath = '/d/' . $discussion->id . '-' . $discussion->slug . (isset($matches[2]) ? '/' . $matches[2] : '');
 
-            // An ideal solution would be to use a content extender,
-            // but unfortunately because of https://github.com/flarum/core/issues/2239
-            // the content extender can't access $document->canonicalUrl
-            if (preg_match('~<link rel="canonical" href="([^"]+)">~', $body, $matches) === 1) {
-                $canonicalPath = (new Uri($matches[1]))->getPath();
-
-                if ($request->getUri()->getPath() !== $canonicalPath) {
-                    return new RedirectResponse($canonicalPath, app()->inDebugMode() ? 302 : 301);
-                }
+            if ($request->getUri()->getPath() !== $canonicalPath) {
+                return new RedirectResponse($canonicalPath, app()->inDebugMode() ? 302 : 301);
             }
-
-            $response->getBody()->rewind();
         }
 
-        return $response;
+        return $handler->handle($request);
     }
 }
