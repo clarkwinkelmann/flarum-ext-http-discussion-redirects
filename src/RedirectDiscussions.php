@@ -26,7 +26,7 @@ class RedirectDiscussions implements MiddlewareInterface
         if (Str::startsWith($path, '/d/') && preg_match('~/d/(\d+)(?:-[^/]*)?(?:/([^/]*))?~', $path, $matches) === 1) {
             $discussion = $this->repository->findOrFail($matches[1], $request->getAttribute('actor'));
 
-            $canonicalPath = '/d/' . $discussion->id . '-' . $discussion->slug . (isset($matches[2]) ? '/' . $matches[2] : '');
+            $canonicalPath = '/d/' . $discussion->id . ($discussion->slug ? '-' . $discussion->slug : '') . (isset($matches[2]) ? '/' . $matches[2] : '');
 
             if ($request->getUri()->getPath() !== $canonicalPath) {
                 return new RedirectResponse($canonicalPath, app()->inDebugMode() ? 302 : 301);
